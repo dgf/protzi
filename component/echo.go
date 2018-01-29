@@ -1,4 +1,4 @@
-package components
+package component
 
 // Echo component pongs an arbitrary ping back.
 type Echo struct {

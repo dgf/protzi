@@ -1,11 +1,11 @@
-package components_test
+package component_test
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
 
-	"github.com/dgf/protzi/components"
+	"github.com/dgf/protzi/component"
 )
 
 func ExampleTextFileRead() {
@@ -30,7 +30,7 @@ func ExampleTextFileRead() {
 	// create and run reader
 	files := make(chan string)
 	text := make(chan string)
-	go (&components.TextFileRead{File: files, Text: text}).Run()
+	go (&component.TextFileRead{File: files, Text: text}).Run()
 
 	// send file name
 	files <- file.Name()

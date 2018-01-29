@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/dgf/protzi"
-	"github.com/dgf/protzi/components"
+	"github.com/dgf/protzi/component"
 )
 
 func ExampleNetwork_echo() {
@@ -16,7 +16,7 @@ func ExampleNetwork_echo() {
 	out := make(chan interface{})
 
 	net := protzi.New("passthru")
-	net.Add("echo", &components.Echo{})
+	net.Add("echo", &component.Echo{})
 	net.In("echo.Ping", in)
 	net.Out("echo.Pong", out)
 	net.Run()
@@ -52,11 +52,11 @@ func TestFileWordCounter(t *testing.T) {
 
 	network := protzi.New("file word counter")
 
-	// add process components
-	network.Add("read", &components.TextFileRead{})
-	network.Add("count", &components.WordCount{})
+	// add process component
+	network.Add("read", &component.TextFileRead{})
+	network.Add("count", &component.WordCount{})
 
-	// connect components
+	// connect component
 	network.In("read.File", in)
 	network.Connect("read.Text", "count.Text")
 	network.Out("count.Counts", out)

@@ -1,17 +1,17 @@
-package components_test
+package component_test
 
 import (
 	"fmt"
 
-	"github.com/dgf/protzi/components"
+	"github.com/dgf/protzi/component"
 )
 
 func ExampleEcho() {
 	ping := make(chan interface{})
 	pong := make(chan interface{})
 
-	// create and run process
-	go (&components.Echo{Ping: ping, Pong: pong}).Run()
+	// create and process
+	go (&component.Echo{Ping: ping, Pong: pong}).Run()
 
 	// ping pong
 	ping <- "echo"

@@ -1,8 +1,8 @@
-package components
+package component
 
 import "io/ioutil"
 
-// TextFileRead components reads text files.
+// TextFileRead component reads text files.
 type TextFileRead struct {
 	File <-chan string
 	Text chan<- string

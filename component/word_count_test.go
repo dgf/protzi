@@ -1,10 +1,10 @@
-package components_test
+package component_test
 
 import (
 	"fmt"
 	"sort"
 
-	"github.com/dgf/protzi/components"
+	"github.com/dgf/protzi/component"
 )
 
 func ExampleWordCount() {
@@ -12,7 +12,7 @@ func ExampleWordCount() {
 	counts := make(chan map[string]int)
 
 	// create and run counter
-	go (&components.WordCount{Text: text, Counts: counts}).Run()
+	go (&component.WordCount{Text: text, Counts: counts}).Run()
 
 	// send text
 	text <- "\f\n\r\ttwo\fone\ntwo\r\t"
