@@ -5,24 +5,29 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"testing"
 
 	"github.com/dgf/protzi"
 	"github.com/dgf/protzi/components"
 )
 
 func ExampleNetwork_echo() {
-	network := protzi.New("echo net")
-	network.Add("proxy", &components.Echo{})
-	network.In("proxy.Ping")
-	network.Out("proxy.Pong")
-	network.Run()
+	in := make(chan interface{})
+	out := make(chan interface{})
 
-	fmt.Println(network.Process("echo"))
+	net := protzi.New("passthru")
+	net.Add("echo", &components.Echo{})
+	net.In("echo.Ping", in)
+	net.Out("echo.Pong", out)
+	net.Run()
+
+	in <- "echo"
+	fmt.Println(<-out)
 	// Output: echo
 }
 
-func ExampleNetwork_fileWordCounter() {
-	data := "\f\n\r\ttwo\fone\ntwo\r\t"
+//func ExampleNetwork_fileWordCounter() {
+func TestFileWordCounter(t *testing.T) {
 
 	// create temp file
 	file, err := ioutil.TempFile(os.TempDir(), "example")
@@ -31,6 +36,7 @@ func ExampleNetwork_fileWordCounter() {
 	}
 
 	// write test data string
+	data := "\f\n\r\ttwo\fone\ntwo\r\t"
 	if _, err := file.Write([]byte(data)); err != nil {
 		panic(err)
 	}
@@ -41,6 +47,9 @@ func ExampleNetwork_fileWordCounter() {
 	}
 
 	// create network
+	in := make(chan string)
+	out := make(chan map[string]int)
+
 	network := protzi.New("file word counter")
 
 	// add process components
@@ -48,19 +57,16 @@ func ExampleNetwork_fileWordCounter() {
 	network.Add("count", &components.WordCount{})
 
 	// connect components
-	network.In("read.File")
+	network.In("read.File", in)
 	network.Connect("read.Text", "count.Text")
-	network.Out("count.Counts")
+	network.Out("count.Counts", out)
 
 	// run it
 	network.Run()
 
 	// process file
-	result := network.Process(file.Name())
-	countsByWord, ok := result.(map[string]int)
-	if !ok {
-		panic(fmt.Sprintf("invalid result: %s", result))
-	}
+	in <- file.Name()
+	countsByWord := <-out
 
 	// stringify and sort word counts (needed for output assertion)
 	wordCounts := []string{}
@@ -70,7 +76,8 @@ func ExampleNetwork_fileWordCounter() {
 	sort.Strings(wordCounts)
 
 	// print word counts
-	fmt.Println(wordCounts)
+	//fmt.Println(wordCounts)
+	t.Log(wordCounts)
 
 	// delete temporary file
 	if err := os.Remove(file.Name()); err != nil {
