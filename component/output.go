@@ -2,7 +2,7 @@ package component
 
 import "fmt"
 
-// Output prints the message on stdout
+// Output prints the messages on stdout
 type Output struct {
 	Message <-chan interface{}
 }

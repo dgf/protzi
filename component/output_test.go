@@ -1,17 +1,25 @@
 package component_test
 
-import (
-	"github.com/dgf/protzi/component"
-)
+import "github.com/dgf/protzi/component"
 
 func ExampleOutput() {
 	messages := make(chan interface{})
+	done := make(chan bool, 1)
 
-	// create and process
-	go (&component.Output{Message: messages}).Run()
+	go func() {
+		(&component.Output{Message: messages}).Run()
+		done <- true
+	}()
 
-	// output
-	messages <- "test"
+	messages <- "one"
+	messages <- "two"
+	messages <- "three"
 
-	// Output: test
+	close(messages)
+	<-done
+
+	// Output:
+	// one
+	// two
+	// three
 }
