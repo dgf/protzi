@@ -26,8 +26,7 @@ func ExampleNetwork_echo() {
 	// Output: echo
 }
 
-//func ExampleNetwork_fileWordCounter() {
-func TestFileWordCounter(t *testing.T) {
+func ExampleNetwork_fileWordCounter() {
 
 	// create temp file
 	file, err := ioutil.TempFile(os.TempDir(), "example")
@@ -76,12 +75,24 @@ func TestFileWordCounter(t *testing.T) {
 	sort.Strings(wordCounts)
 
 	// print word counts
-	//fmt.Println(wordCounts)
-	t.Log(wordCounts)
+	fmt.Println(wordCounts)
 
 	// delete temporary file
 	if err := os.Remove(file.Name()); err != nil {
 		panic(err)
 	}
 	// Output: [one: 1 two: 2]
+}
+
+func TestNetwork_Connect_invalidPanic(t *testing.T) {
+	network := protzi.New("count out to in")
+	network.Add("countOut", &component.WordCount{})
+	network.Add("countIn", &component.WordCount{})
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("should panic with invalid type")
+		}
+	}()
+	network.Connect("countOut.Counts", "countIn.Text")
 }

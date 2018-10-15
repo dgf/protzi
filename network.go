@@ -79,6 +79,7 @@ func (n *network) Add(name string, c Component) {
 // Connect two channels from the output of one to the input of another.
 func (n *network) Connect(out, in string) {
 	log.Println("connect", out, in)
+
 	if op, ok := n.outs[out]; !ok {
 		panic(fmt.Sprintf("input port %q not found", out))
 	} else if ip, ok := n.ins[in]; !ok {
@@ -88,6 +89,13 @@ func (n *network) Connect(out, in string) {
 		if _, ok := n.connections[cn]; ok {
 			panic(fmt.Sprintf("connected %q before", cn))
 		}
+
+		inTypeElem := ip.Type().Elem()
+		outTypeElem := op.Type().Elem()
+		if !inTypeElem.ConvertibleTo(outTypeElem) {
+			panic(fmt.Sprintf("Type differs %s != %s\n", outTypeElem, inTypeElem))
+		}
+
 		n.connections[cn] = connection{name: cn, in: op, out: ip}
 	}
 }
