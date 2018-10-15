@@ -2,10 +2,11 @@ package protzi
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 )
 
-// Network thats flows.
+// Network that flows.
 type Network interface {
 	Add(string, Component)
 	Connect(out, in string)
@@ -14,39 +15,16 @@ type Network interface {
 	Run()
 }
 
-type connection struct {
-	// out > in
-	name string
-	// input channel (out port)
-	in reflect.Value
-	// output channel (in port)
-	out reflect.Value
-}
-
-func (c *connection) run() {
-	fmt.Println("run connection", c.name)
-	ot := c.out.Type().Elem()
-	for { // loop forever
-		if v, ok := c.in.Recv(); !ok {
-			panic(fmt.Sprintf("connection %q closed", c.name))
-		} else {
-			fmt.Println("send", c.name, ot, v.Type())
-
-			// convert?
-			if c.out.Type().Elem() != v.Type() {
-				panic(fmt.Sprintf("Type differs %s != %s\n", c.out.Type().Elem(), v.Type()))
-			}
-
-			c.out.Send(v)
-		}
-	}
-}
-
 type network struct {
+	// component by name
+	components map[string]Component
+
+	// component connections by combined name
 	connections map[string]connection
-	components  map[string]Component
+
 	// input channels by component port name
 	ins map[string]reflect.Value
+
 	// output channels by component port name
 	outs map[string]reflect.Value
 }
@@ -61,9 +39,10 @@ func New(i interface{}) Network {
 	}
 }
 
+// Add a component with a unique name (initializes all unidirectional channels)
 func (n *network) Add(name string, c Component) {
-	fmt.Println("add", name)
-	n.components[name] = c
+	log.Println("add", name)
+	n.components[name] = c // TODO override = Set?
 
 	// get underlying value and type
 	v := reflect.ValueOf(c).Elem()
@@ -97,8 +76,9 @@ func (n *network) Add(name string, c Component) {
 	}
 }
 
+// Connect two channels from the output of one to the input of another.
 func (n *network) Connect(out, in string) {
-	fmt.Println("connect", out, in)
+	log.Println("connect", out, in)
 	if op, ok := n.outs[out]; !ok {
 		panic(fmt.Sprintf("input port %q not found", out))
 	} else if ip, ok := n.ins[in]; !ok {
@@ -112,8 +92,9 @@ func (n *network) Connect(out, in string) {
 	}
 }
 
+// Run starts the network by co-routine-ing all connection channels and components
 func (n *network) Run() {
-	fmt.Println("run net")
+	log.Println("run net")
 	for _, c := range n.connections {
 		go func(c connection) { c.run() }(c)
 	}
@@ -122,8 +103,9 @@ func (n *network) Run() {
 	}
 }
 
+// In maps an input channel
 func (n *network) In(in string, c interface{}) {
-	fmt.Println("in", in)
+	log.Println("in", in)
 	if ip, ok := n.ins[in]; !ok {
 		panic(fmt.Sprintf("input port %q not found", in))
 	} else {
@@ -136,8 +118,9 @@ func (n *network) In(in string, c interface{}) {
 	}
 }
 
+// Out maps an output channel
 func (n *network) Out(out string, c interface{}) {
-	fmt.Println("out", out)
+	log.Println("out", out)
 	if op, ok := n.outs[out]; !ok {
 		panic(fmt.Sprintf("output port %q not found", out))
 	} else {
