@@ -23,7 +23,7 @@ func (c *connection) run() {
 		if v, ok := c.in.Recv(); !ok {
 			panic(fmt.Sprintf("connection %q closed", c.name))
 		} else {
-			log.Println("send", c.name, v)
+			log.Println("send", c.name)
 			c.out.Send(v)
 		}
 	}

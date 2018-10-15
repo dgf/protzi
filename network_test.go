@@ -84,6 +84,13 @@ func ExampleNetwork_fileWordCounter() {
 	// Output: [one: 1 two: 2]
 }
 
+func TestNetwork_Connect_valid(t *testing.T) {
+	network := protzi.New("count out to in")
+	network.Add("read", &component.TextFileRead{})
+	network.Add("out", &component.Output{})
+	network.Connect("read.Text", "out.Message")
+}
+
 func TestNetwork_Connect_invalidPanic(t *testing.T) {
 	network := protzi.New("count out to in")
 	network.Add("countOut", &component.WordCount{})

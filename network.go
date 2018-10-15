@@ -90,10 +90,10 @@ func (n *network) Connect(out, in string) {
 			panic(fmt.Sprintf("connected %q before", cn))
 		}
 
-		inTypeElem := ip.Type().Elem()
-		outTypeElem := op.Type().Elem()
+		outTypeElem := ip.Type().Elem()
+		inTypeElem := op.Type().Elem()
 		if !inTypeElem.ConvertibleTo(outTypeElem) {
-			panic(fmt.Sprintf("Type differs %s != %s\n", outTypeElem, inTypeElem))
+			panic(fmt.Sprintf("Type differs %s != %s\n", inTypeElem, outTypeElem))
 		}
 
 		n.connections[cn] = connection{name: cn, in: op, out: ip}
@@ -117,12 +117,19 @@ func (n *network) In(in string, c interface{}) {
 	if ip, ok := n.ins[in]; !ok {
 		panic(fmt.Sprintf("input port %q not found", in))
 	} else {
-		// TODO validate channel
 		cn := "net > " + in
 		if _, ok := n.connections[cn]; ok {
 			panic(fmt.Sprintf("connected %q before", cn))
 		}
-		n.connections[cn] = connection{name: cn, in: reflect.ValueOf(c), out: ip}
+
+		outTypeElem := ip.Type().Elem()
+		valueOfChannel := reflect.ValueOf(c)
+		inTypeElem := valueOfChannel.Type().Elem()
+		if !inTypeElem.ConvertibleTo(outTypeElem) {
+			panic(fmt.Sprintf("Type differs %s > %s\n", inTypeElem, outTypeElem))
+		}
+
+		n.connections[cn] = connection{name: cn, in: valueOfChannel, out: ip}
 	}
 }
 
@@ -132,11 +139,18 @@ func (n *network) Out(out string, c interface{}) {
 	if op, ok := n.outs[out]; !ok {
 		panic(fmt.Sprintf("output port %q not found", out))
 	} else {
-		// TODO validate channel
 		cn := out + " > net"
 		if _, ok := n.connections[cn]; ok {
 			panic(fmt.Sprintf("connected %q before", cn))
 		}
+
+		inTypeElem := op.Type().Elem()
+		valueOfChannel := reflect.ValueOf(c)
+		outTypeElem := valueOfChannel.Type().Elem()
+		if !inTypeElem.ConvertibleTo(outTypeElem) {
+			panic(fmt.Sprintf("Type differs %s > %s\n", inTypeElem, outTypeElem))
+		}
+
 		n.connections[cn] = connection{name: cn, in: op, out: reflect.ValueOf(c)}
 	}
 }
