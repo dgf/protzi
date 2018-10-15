@@ -4,13 +4,17 @@ import "io/ioutil"
 
 // TextFileRead component reads text files.
 type TextFileRead struct {
-	File <-chan string
-	Text chan<- string
+	File  <-chan string
+	Text  chan<- string
+	Error chan<- string
 }
 
 func (r *TextFileRead) Run() {
 	for f := range r.File {
-		t, _ := ioutil.ReadFile(f)
-		r.Text <- string(t)
+		if t, err := ioutil.ReadFile(f); err != nil {
+			r.Error <- "Error: file " + f + " not found."
+		} else {
+			r.Text <- string(t)
+		}
 	}
 }

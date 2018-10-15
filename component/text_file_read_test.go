@@ -47,3 +47,15 @@ func ExampleTextFileRead() {
 	// one
 	// two
 }
+
+func ExampleTextFileRead_Run_fileNotFound() {
+	files := make(chan string)
+	failures := make(chan string)
+	go (&component.TextFileRead{File: files, Error: failures}).Run()
+
+	unknown := "/unknown/test/file/name"
+	files <- unknown
+	fmt.Println(<-failures)
+
+	// Output: Error: file /unknown/test/file/name not found.
+}
