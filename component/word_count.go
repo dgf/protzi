@@ -14,6 +14,7 @@ type WordCount struct {
 // cleanup replacements
 var replacer = strings.NewReplacer("\f", " ", "\r", " ", "\t", " ")
 
+// Run counts words of the text and returns a map of word counts.
 func (wc *WordCount) Run() {
 	for t := range wc.Text {
 

@@ -21,7 +21,7 @@ func ExampleWordCount() {
 	countsByWord := <-counts
 
 	// stringify and sort word counts (needed for output assertion)
-	wordCounts := []string{}
+	var wordCounts []string
 	for word := range countsByWord {
 		wordCounts = append(wordCounts, fmt.Sprintf("%s: %d", word, countsByWord[word]))
 	}

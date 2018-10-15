@@ -16,33 +16,36 @@ type Network interface {
 }
 
 type network struct {
+	name string
+
 	// component by name
 	components map[string]Component
-
-	// component connections by combined name
-	connections map[string]connection
 
 	// input channels by component port name
 	ins map[string]reflect.Value
 
 	// output channels by component port name
 	outs map[string]reflect.Value
+
+	// component connections by combined name
+	connections map[string]connection
 }
 
 // New creates a fresh empty network.
-func New(i interface{}) Network {
+func New(name string) Network {
 	return &network{
-		connections: map[string]connection{},
+		name:        name,
 		components:  map[string]Component{},
 		ins:         map[string]reflect.Value{},
 		outs:        map[string]reflect.Value{},
+		connections: map[string]connection{},
 	}
 }
 
 // Add a component with a unique name (initializes all unidirectional channels)
 func (n *network) Add(name string, c Component) {
 	log.Println("add", name)
-	n.components[name] = c // TODO override = Set?
+	n.components[name] = c
 
 	// get underlying value and type
 	v := reflect.ValueOf(c).Elem()
@@ -119,7 +122,7 @@ func (n *network) In(in string, c interface{}) {
 	} else {
 		cn := "net > " + in
 		if _, ok := n.connections[cn]; ok {
-			panic(fmt.Sprintf("connected %q before", cn))
+			panic(fmt.Sprintf("Connected %q before", cn))
 		}
 
 		outTypeElem := ip.Type().Elem()

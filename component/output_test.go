@@ -4,7 +4,7 @@ import "github.com/dgf/protzi/component"
 
 func ExampleOutput() {
 	messages := make(chan interface{})
-	done := make(chan bool, 1)
+	done := make(chan bool)
 
 	go func() {
 		(&component.Output{Message: messages}).Run()

@@ -68,7 +68,7 @@ func ExampleNetwork_fileWordCounter() {
 	countsByWord := <-out
 
 	// stringify and sort word counts (needed for output assertion)
-	wordCounts := []string{}
+	var wordCounts []string
 	for word := range countsByWord {
 		wordCounts = append(wordCounts, fmt.Sprintf("%s: %d", word, countsByWord[word]))
 	}
@@ -85,21 +85,21 @@ func ExampleNetwork_fileWordCounter() {
 }
 
 func TestNetwork_Connect_valid(t *testing.T) {
-	network := protzi.New("count out to in")
+	network := protzi.New("valid read text to output interface")
 	network.Add("read", &component.TextFileRead{})
 	network.Add("out", &component.Output{})
 	network.Connect("read.Text", "out.Message")
 }
 
 func TestNetwork_Connect_invalidPanic(t *testing.T) {
-	network := protzi.New("count out to in")
-	network.Add("countOut", &component.WordCount{})
-	network.Add("countIn", &component.WordCount{})
+	network := protzi.New("invalid count output map to input text")
+	network.Add("out", &component.WordCount{})
+	network.Add("in", &component.WordCount{})
 
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("should panic with invalid type")
+			t.Errorf("should panic with invalid type mapping")
 		}
 	}()
-	network.Connect("countOut.Counts", "countIn.Text")
+	network.Connect("out.Counts", "in.Text")
 }
