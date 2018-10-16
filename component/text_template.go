@@ -7,7 +7,7 @@ import (
 
 // TextTemplate component renders a template.
 type TextTemplate struct {
-	Template <-chan *template.Template
+	Template <-chan string
 	Data     <-chan interface{}
 	Output   chan<- string
 	Error    chan<- string
@@ -15,13 +15,16 @@ type TextTemplate struct {
 
 // Run renders the template.
 func (t *TextTemplate) Run() {
-	tmpl := <-t.Template
-	for data := range t.Data {
-		b := &bytes.Buffer{}
-		if err := tmpl.Execute(b, data); err != nil {
-			t.Error <- "Error: " + err.Error()
+	for templateString := range t.Template {
+		if parsedTemplate, err := template.New("text").Parse(templateString); err != nil {
+			t.Error <- "Template error: " + err.Error()
 		} else {
-			t.Output <- b.String()
+			writer := &bytes.Buffer{}
+			if err := parsedTemplate.Execute(writer, <-t.Data); err != nil {
+				t.Error <- "Execute error: " + err.Error()
+			} else {
+				t.Output <- writer.String()
+			}
 		}
 	}
 }

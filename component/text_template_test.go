@@ -2,13 +2,12 @@ package component_test
 
 import (
 	"fmt"
-	"text/template"
 
 	"github.com/dgf/protzi/component"
 )
 
 func ExampleTextTemplate_Run() {
-	templates := make(chan *template.Template)
+	templates := make(chan string)
 	data := make(chan interface{})
 	output := make(chan string)
 
@@ -18,19 +17,14 @@ func ExampleTextTemplate_Run() {
 		Output:   output,
 	}).Run()
 
-	helloTemplate, err := template.New("hello").Parse("Hello {{.Name}}!")
-	if err != nil {
-		panic(err)
-	}
-
-	templates <- helloTemplate
+	templates <- "Hello {{.Name}}!"
 	data <- struct{ Name string }{Name: "World"}
 	fmt.Println(<-output)
 	// Output: Hello World!
 }
 
 func ExampleTextTemplate_Run_invalidData() {
-	templates := make(chan *template.Template)
+	templates := make(chan string)
 	data := make(chan interface{})
 	failures := make(chan string)
 
@@ -40,14 +34,24 @@ func ExampleTextTemplate_Run_invalidData() {
 		Error:    failures,
 	}).Run()
 
-	invalidTemplate, err := template.New("invalid").Parse("{{.Test}}")
-	if err != nil {
-		panic(err)
-	}
-
-	templates <- invalidTemplate
+	templates <- "{{.Test}}"
 	data <- struct{}{}
 	fmt.Println(<-failures)
 	// Output:
-	// Error: template: invalid:1:2: executing "invalid" at <.Test>: can't evaluate field Test in type struct {}
+	// Execute error: template: text:1:2: executing "text" at <.Test>: can't evaluate field Test in type struct {}
+}
+
+func ExampleTextTemplate_Run_invalidTemplate() {
+	templates := make(chan string)
+	failures := make(chan string)
+
+	go (&component.TextTemplate{
+		Template: templates,
+		Error:    failures,
+	}).Run()
+
+	templates <- "{{Invalid?}}"
+	fmt.Println(<-failures)
+	// Output:
+	// Template error: template: text:1: unexpected bad character U+003F '?' in command
 }
