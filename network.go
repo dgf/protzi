@@ -34,8 +34,8 @@ type network struct {
 	// output channels by component port name
 	outs map[string]reflect.Value
 
-	// component connections by combined name
-	connections map[string]connection
+	// component output to input connections
+	connections map[string][]string
 }
 
 // Add a component with a unique name (initializes all unidirectional channels)
@@ -84,27 +84,10 @@ func (n *network) Connect(out, in string) {
 		panic(fmt.Sprintf("Input port %q not found", out))
 	} else if ip, ok := n.ins[in]; !ok {
 		panic(fmt.Sprintf("Output port %q not found", in))
-	} else if _, ok := n.connections[cn]; ok {
-		panic(fmt.Sprintf("Connected %q before", cn))
 	} else if err := convertibleTo(ip.Type().Elem(), op.Type().Elem()); err != nil {
 		panic(err)
 	} else {
-		n.connections[cn] = connection{name: cn, in: op, out: ip}
-	}
-}
-
-// Run starts the network by co-routine-ing all connection channels and components
-func (n *network) Run() {
-	log.Println("Run network", n.name)
-	for _, c := range n.connections {
-		go func(c connection) {
-			c.run()
-		}(c)
-	}
-	for _, c := range n.components {
-		go func(c Component) {
-			c.Run()
-		}(c)
+		n.connections[out] = append(n.connections[out], in)
 	}
 }
 
@@ -121,7 +104,8 @@ func (n *network) In(in string, c interface{}) {
 	} else if err := convertibleTo(ip.Type().Elem(), valueType); err != nil {
 		panic(err)
 	} else {
-		n.connections[cn] = connection{name: cn, in: reflect.ValueOf(c), out: ip}
+		n.outs[cn] = reflect.ValueOf(c)
+		n.connections[cn] = append(n.connections[cn], in)
 	}
 }
 
@@ -138,7 +122,36 @@ func (n *network) Out(out string, c interface{}) {
 	} else if err := convertibleTo(valueType, op.Type().Elem()); err != nil {
 		panic(err)
 	} else {
-		n.connections[cn] = connection{name: cn, in: op, out: reflect.ValueOf(c)}
+		n.ins[cn] = reflect.ValueOf(c)
+		n.connections[out] = append(n.connections[out], cn)
+	}
+}
+
+// Run starts the network by co-routine-ing all connection channels and components
+func (n *network) Run() {
+	log.Println("Run network", n.name)
+
+	// connections
+	for s, o := range n.outs {
+		go func(sender string, out reflect.Value) {
+			for { // read forever
+				if v, ok := out.Recv(); !ok {
+					panic(fmt.Sprintf("connection %q closed", sender))
+				} else {
+					for _, receiver := range n.connections[sender] {
+						log.Println("send", sender, ">", receiver)
+						n.ins[receiver].Send(v)
+					}
+				}
+			}
+		}(s, o)
+	}
+
+	// instances
+	for _, c := range n.components {
+		go func(c Component) {
+			c.Run()
+		}(c)
 	}
 }
 
@@ -149,6 +162,6 @@ func New(name string) Network {
 		components:  map[string]Component{},
 		ins:         map[string]reflect.Value{},
 		outs:        map[string]reflect.Value{},
-		connections: map[string]connection{},
+		connections: map[string][]string{},
 	}
 }

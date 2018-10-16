@@ -21,9 +21,47 @@ func ExampleNetwork_echo() {
 	net.Out("echo.Pong", out)
 	net.Run()
 
-	in <- "echo"
+	in <- "one"
 	fmt.Println(<-out)
-	// Output: echo
+	in <- "two"
+	fmt.Println(<-out)
+	// Output:
+	// one
+	// two
+}
+
+func ExampleNetwork_split() {
+	in := make(chan interface{})
+	out1 := make(chan interface{})
+	out2 := make(chan interface{})
+
+	net := protzi.New("split")
+	net.Add("echoIn", &component.Echo{})
+	net.Add("echoOut1", &component.Echo{})
+	net.Add("echoOut2", &component.Echo{})
+
+	net.In("echoIn.Ping", in)
+	net.Connect("echoIn.Pong", "echoOut1.Ping")
+	net.Connect("echoIn.Pong", "echoOut2.Ping")
+	net.Out("echoOut1.Pong", out1)
+	net.Out("echoOut2.Pong", out2)
+	net.Run()
+
+	in <- "echo"
+	twice := 0
+	for twice != 2 {
+		select {
+		case o := <-out1:
+			fmt.Println(o)
+			twice++
+		case o := <-out2:
+			fmt.Println(o)
+			twice++
+		}
+	}
+	// Output:
+	// echo
+	// echo
 }
 
 func ExampleNetwork_fileWordCounter() {
