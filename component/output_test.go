@@ -4,19 +4,18 @@ import "github.com/dgf/protzi/component"
 
 func ExampleOutput() {
 	messages := make(chan interface{})
-	done := make(chan bool)
+	printed := make(chan bool)
 
-	go func() {
-		(&component.Output{Message: messages}).Run()
-		done <- true
-	}()
+	printer := &component.Output{
+		Message: messages,
+		Printed: printed,
+	}
+	go printer.Run()
 
-	messages <- "one"
-	messages <- "two"
-	messages <- "three"
-
-	close(messages)
-	<-done
+	for _, m := range []string{"one", "two", "three"} {
+		messages <- m
+		<-printed
+	}
 
 	// Output:
 	// one
