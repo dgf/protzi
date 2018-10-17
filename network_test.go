@@ -126,7 +126,7 @@ func ExampleNetwork_fileWordCounter() {
 func TestNetwork_Connect_valid(t *testing.T) {
 	network := protzi.New("valid read text to output interface")
 	network.Add("read", &text.FileRead{})
-	network.Add("out", &core.Output{})
+	network.Add("out", &core.Print{})
 	network.Connect("read.Text", "out.Message")
 }
 

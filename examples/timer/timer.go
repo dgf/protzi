@@ -34,7 +34,7 @@ func main() {
 	net := protzi.New("timer")
 	net.Add("timer", &core.Timer{})
 	net.Add("ticker", &core.Ticker{})
-	net.Add("output", &core.Output{})
+	net.Add("output", &core.Print{})
 
 	// bind
 	durations := make(chan time.Duration)

@@ -2,11 +2,11 @@ package core_test
 
 import "github.com/dgf/protzi/component/core"
 
-func ExampleOutput_Run() {
+func ExamplePrint_Run() {
 	messages := make(chan interface{})
 	printed := make(chan bool)
 
-	printer := &core.Output{
+	printer := &core.Print{
 		Message: messages,
 		Printed: printed,
 	}

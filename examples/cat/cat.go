@@ -30,7 +30,7 @@ func main() {
 	// create network
 	net := protzi.New("cat")
 	net.Add("read", &text.FileRead{})
-	net.Add("output", &core.Output{})
+	net.Add("output", &core.Print{})
 
 	// bind channels
 	in := make(chan string)

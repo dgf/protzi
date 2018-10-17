@@ -12,7 +12,7 @@ func main() {
 	in := make(chan string)
 
 	net := protzi.New("display")
-	net.Add("output", &core.Output{})
+	net.Add("output", &core.Print{})
 	net.In("output.Message", in)
 	net.Run()
 

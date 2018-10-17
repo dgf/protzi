@@ -18,7 +18,7 @@ func main() {
 	net := protzi.New("word count")
 	net.Add("read", &text.FileRead{})
 	net.Add("count", &text.WordCount{})
-	net.Add("output", &core.Output{})
+	net.Add("output", &core.Print{})
 
 	// bind
 	in := make(chan string)
