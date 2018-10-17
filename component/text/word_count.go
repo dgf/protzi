@@ -1,4 +1,4 @@
-package component
+package text
 
 import (
 	"strings"

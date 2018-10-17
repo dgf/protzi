@@ -1,21 +1,22 @@
-package component_test
+package text_test
 
 import (
 	"fmt"
 
-	"github.com/dgf/protzi/component"
+	"github.com/dgf/protzi/component/text"
 )
 
-func ExampleTextTemplate_Run() {
+func ExampleRender_Run() {
 	templates := make(chan string)
 	data := make(chan interface{})
 	output := make(chan string)
 
-	go (&component.TextTemplate{
+	renderer := &text.Render{
 		Template: templates,
 		Data:     data,
 		Output:   output,
-	}).Run()
+	}
+	go renderer.Run()
 
 	templates <- "Hello {{.Name}}!"
 	data <- struct{ Name string }{Name: "World"}
@@ -23,16 +24,17 @@ func ExampleTextTemplate_Run() {
 	// Output: Hello World!
 }
 
-func ExampleTextTemplate_Run_invalidData() {
+func ExampleRender_Run_invalidData() {
 	templates := make(chan string)
 	data := make(chan interface{})
 	failures := make(chan string)
 
-	go (&component.TextTemplate{
+	renderer := &text.Render{
 		Template: templates,
 		Data:     data,
 		Error:    failures,
-	}).Run()
+	}
+	go renderer.Run()
 
 	templates <- "{{.Test}}"
 	data <- struct{}{}
@@ -45,13 +47,14 @@ func ExampleTextTemplate_Run_invalidTemplate() {
 	templates := make(chan string)
 	failures := make(chan string)
 
-	go (&component.TextTemplate{
+	renderer := &text.Render{
 		Template: templates,
 		Error:    failures,
-	}).Run()
+	}
+	go renderer.Run()
 
 	templates <- "{{Invalid?}}"
 	fmt.Println(<-failures)
 	// Output:
-	// Template error: template: text:1: unexpected bad character U+003F '?' in command
+	// Render error: template: text:1: unexpected bad character U+003F '?' in command
 }

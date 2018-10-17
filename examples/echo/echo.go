@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/dgf/protzi"
-	"github.com/dgf/protzi/component"
+	"github.com/dgf/protzi/component/core"
 )
 
 func main() {
 	in := make(chan string)
 
 	net := protzi.New("display")
-	net.Add("output", &component.Output{})
+	net.Add("output", &core.Output{})
 	net.In("output.Message", in)
 	net.Run()
 

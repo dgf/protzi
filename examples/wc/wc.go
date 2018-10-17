@@ -5,16 +5,17 @@ import (
 	"os"
 
 	"github.com/dgf/protzi"
-	"github.com/dgf/protzi/component"
+	"github.com/dgf/protzi/component/core"
+	"github.com/dgf/protzi/component/text"
 )
 
 func main() {
 	in := make(chan string)
 	net := protzi.New("word count")
 
-	net.Add("read", &component.TextFileRead{})
-	net.Add("count", &component.WordCount{})
-	net.Add("output", &component.Output{})
+	net.Add("read", &text.FileRead{})
+	net.Add("count", &text.WordCount{})
+	net.Add("output", &core.Output{})
 
 	net.Connect("read.Text", "count.Text")
 	net.Connect("read.Error", "output.Message")

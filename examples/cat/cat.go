@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/dgf/protzi"
-	"github.com/dgf/protzi/component"
+	"github.com/dgf/protzi/component/core"
+	"github.com/dgf/protzi/component/text"
 )
 
 // go run cat.go
@@ -28,8 +29,8 @@ func main() {
 
 	// create network
 	net := protzi.New("cat")
-	net.Add("read", &component.TextFileRead{})
-	net.Add("output", &component.Output{})
+	net.Add("read", &text.FileRead{})
+	net.Add("output", &core.Output{})
 
 	// bind channels
 	in := make(chan string)

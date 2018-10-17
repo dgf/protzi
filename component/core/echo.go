@@ -1,4 +1,4 @@
-package component
+package core
 
 // Echo component pongs an arbitrary ping.
 type Echo struct {

@@ -6,6 +6,11 @@ import (
 	"reflect"
 )
 
+// Component that can run
+type Component interface {
+	Run()
+}
+
 // Network that flows.
 type Network interface {
 	Add(string, Component)

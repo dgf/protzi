@@ -1,14 +1,14 @@
-package component_test
+package text_test
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
 
-	"github.com/dgf/protzi/component"
+	"github.com/dgf/protzi/component/text"
 )
 
-func ExampleTextFileRead() {
+func ExampleFileRead_Run() {
 	data := "one\ntwo"
 
 	// create temp file
@@ -29,14 +29,15 @@ func ExampleTextFileRead() {
 
 	// create and run reader
 	files := make(chan string)
-	text := make(chan string)
-	go (&component.TextFileRead{File: files, Text: text}).Run()
+	texts := make(chan string)
+	reader := &text.FileRead{File: files, Text: texts}
+	go reader.Run()
 
 	// send file name
 	files <- file.Name()
 
 	// print file content
-	fmt.Println(<-text)
+	fmt.Println(<-texts)
 
 	// delete temporary file
 	if err := os.Remove(file.Name()); err != nil {
@@ -48,14 +49,14 @@ func ExampleTextFileRead() {
 	// two
 }
 
-func ExampleTextFileRead_Run_fileNotFound() {
+func ExampleFileRead_Run_fileNotFound() {
 	files := make(chan string)
 	failures := make(chan string)
-	go (&component.TextFileRead{File: files, Error: failures}).Run()
+	reader := &text.FileRead{File: files, Error: failures}
+	go reader.Run()
 
 	unknown := "/unknown/test/file/name"
 	files <- unknown
 	fmt.Println(<-failures)
-
 	// Output: Error: file /unknown/test/file/name not found.
 }

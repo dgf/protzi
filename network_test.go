@@ -8,7 +8,8 @@ import (
 	"testing"
 
 	"github.com/dgf/protzi"
-	"github.com/dgf/protzi/component"
+	"github.com/dgf/protzi/component/core"
+	"github.com/dgf/protzi/component/text"
 )
 
 func ExampleNetwork_echo() {
@@ -16,7 +17,7 @@ func ExampleNetwork_echo() {
 	out := make(chan interface{})
 
 	net := protzi.New("passthru")
-	net.Add("echo", &component.Echo{})
+	net.Add("echo", &core.Echo{})
 	net.In("echo.Ping", in)
 	net.Out("echo.Pong", out)
 	net.Run()
@@ -36,9 +37,9 @@ func ExampleNetwork_split() {
 	out2 := make(chan interface{})
 
 	net := protzi.New("split")
-	net.Add("echoIn", &component.Echo{})
-	net.Add("echoOut1", &component.Echo{})
-	net.Add("echoOut2", &component.Echo{})
+	net.Add("echoIn", &core.Echo{})
+	net.Add("echoOut1", &core.Echo{})
+	net.Add("echoOut2", &core.Echo{})
 
 	net.In("echoIn.Ping", in)
 	net.Connect("echoIn.Pong", "echoOut1.Ping")
@@ -90,8 +91,8 @@ func ExampleNetwork_fileWordCounter() {
 	network := protzi.New("file word counter")
 
 	// add process component
-	network.Add("read", &component.TextFileRead{})
-	network.Add("count", &component.WordCount{})
+	network.Add("read", &text.FileRead{})
+	network.Add("count", &text.WordCount{})
 
 	// connect component
 	network.In("read.File", in)
@@ -124,15 +125,15 @@ func ExampleNetwork_fileWordCounter() {
 
 func TestNetwork_Connect_valid(t *testing.T) {
 	network := protzi.New("valid read text to output interface")
-	network.Add("read", &component.TextFileRead{})
-	network.Add("out", &component.Output{})
+	network.Add("read", &text.FileRead{})
+	network.Add("out", &core.Output{})
 	network.Connect("read.Text", "out.Message")
 }
 
 func TestNetwork_Connect_invalidPanic(t *testing.T) {
 	network := protzi.New("invalid count output map to input text")
-	network.Add("out", &component.WordCount{})
-	network.Add("in", &component.WordCount{})
+	network.Add("out", &text.WordCount{})
+	network.Add("in", &text.WordCount{})
 
 	defer func() {
 		if r := recover(); r == nil {

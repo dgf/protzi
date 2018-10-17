@@ -1,12 +1,12 @@
-package component_test
+package core_test
 
-import "github.com/dgf/protzi/component"
+import "github.com/dgf/protzi/component/core"
 
-func ExampleOutput() {
+func ExampleOutput_Run() {
 	messages := make(chan interface{})
 	printed := make(chan bool)
 
-	printer := &component.Output{
+	printer := &core.Output{
 		Message: messages,
 		Printed: printed,
 	}

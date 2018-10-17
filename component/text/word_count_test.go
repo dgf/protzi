@@ -1,21 +1,22 @@
-package component_test
+package text_test
 
 import (
 	"fmt"
 	"sort"
 
-	"github.com/dgf/protzi/component"
+	"github.com/dgf/protzi/component/text"
 )
 
 func ExampleWordCount() {
-	text := make(chan string)
+	texts := make(chan string)
 	counts := make(chan map[string]int)
 
 	// create and run counter
-	go (&component.WordCount{Text: text, Counts: counts}).Run()
+	counter := &text.WordCount{Text: texts, Counts: counts}
+	go counter.Run()
 
 	// send text
-	text <- "\f\n\r\ttwo\fone\ntwo\r\t"
+	texts <- "\f\n\r\ttwo\fone\ntwo\r\t"
 
 	// read word counts
 	countsByWord := <-counts
@@ -29,6 +30,5 @@ func ExampleWordCount() {
 
 	// print word counts
 	fmt.Println(wordCounts)
-
 	// Output: [one: 1 two: 2]
 }
