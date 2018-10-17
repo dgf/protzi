@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"os"
 
 	"github.com/dgf/protzi"
@@ -9,23 +8,33 @@ import (
 	"github.com/dgf/protzi/component/text"
 )
 
+// go run wc.go /etc/group /unknown/file
 func main() {
-	in := make(chan string)
-	net := protzi.New("word count")
+	if len(os.Args) == 1 {
+		return
+	}
 
+	// create
+	net := protzi.New("word count")
 	net.Add("read", &text.FileRead{})
 	net.Add("count", &text.WordCount{})
 	net.Add("output", &core.Output{})
 
+	// bind
+	in := make(chan string)
+	out := make(chan bool)
+	net.In("read.File", in)
+	net.Out("output.Printed", out)
+
+	// connect and run
 	net.Connect("read.Text", "count.Text")
 	net.Connect("read.Error", "output.Message")
 	net.Connect("count.Counts", "output.Message")
-
-	net.In("read.File", in)
 	net.Run()
 
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		in <- scanner.Text()
+	// flow the arguments
+	for _, arg := range os.Args[1:] {
+		in <- arg
+		<-out
 	}
 }
