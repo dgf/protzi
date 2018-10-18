@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "\n--- cat some files --------------------------------------------\n"
-(cd cat; echo -e "/etc/issue\n/unknown/file" | xargs go run cat.go)
+(cd cat; echo "/etc/issue\n/unknown/file" | xargs go run cat.go)
 
 echo "\n--- run a short timer -----------------------------------------\n"
 (cd timer; go run timer.go 3 1)
