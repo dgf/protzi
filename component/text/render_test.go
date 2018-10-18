@@ -22,7 +22,7 @@ func ExampleRender_Run() {
 
 	t := `{{if eq "de" .Lang}}Hallo{{else if eq "es" .Lang}}Hola{{else}}Hello{{end}} {{.Name}}!`
 	for _, data := range []struct{ Lang, Name string }{
-		{"es", "mondo"},
+		{"es", "mundo"},
 		{"en", "world"},
 		{"de", "Welt"},
 	} {
@@ -36,7 +36,7 @@ func ExampleRender_Run() {
 		}
 	}
 	// Output:
-	// Hola mondo!
+	// Hola mundo!
 	// Hello world!
 	// Hallo Welt!
 }
