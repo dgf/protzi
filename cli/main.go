@@ -4,33 +4,33 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/dgf/protzi/api"
 	"github.com/dgf/protzi/component/core"
 	"github.com/dgf/protzi/component/text"
-	"github.com/dgf/protzi/server"
 )
 
 func main() {
 
 	// register available components
-	server.Register("Echo", &core.Echo{})
-	server.Register("Print", &core.Print{})
-	server.Register("Tick", &core.Tick{})
-	server.Register("Time", &core.Time{})
-	server.Register("Read", &text.FileRead{})
-	server.Register("Render", &text.Render{})
-	server.Register("WordCount", &text.WordCount{})
+	api.Register("Echo", &core.Echo{})
+	api.Register("Print", &core.Print{})
+	api.Register("Tick", &core.Tick{})
+	api.Register("Time", &core.Time{})
+	api.Register("Read", &text.FileRead{})
+	api.Register("Render", &text.Render{})
+	api.Register("WordCount", &text.WordCount{})
 
 	fmt.Println("registry:")
-	for _, component := range server.Components() {
+	for _, component := range api.Components() {
 		fmt.Println(component)
 	}
 
-	echoFlow := server.New("echo")
-	server.New("cat")
-	server.New("wc")
+	echoFlow := api.New("echo")
+	api.New("cat")
+	api.New("wc")
 
 	fmt.Println("flows:")
-	fmt.Println(server.Flows())
+	fmt.Println(api.Flows())
 
 	// flow an echo to print
 	echoFlow.Add("echo1", "Echo")
