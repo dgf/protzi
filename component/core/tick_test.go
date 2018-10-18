@@ -10,7 +10,7 @@ import (
 func TestTicker_Run(t *testing.T) {
 	durations := make(chan time.Duration)
 	stamps := make(chan time.Time)
-	ticker := &core.Ticker{
+	ticker := &core.Tick{
 		Duration: durations,
 		Stamps:   stamps,
 	}

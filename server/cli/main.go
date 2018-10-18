@@ -14,8 +14,8 @@ func main() {
 	// register available components
 	server.Register("Echo", &core.Echo{})
 	server.Register("Print", &core.Print{})
-	server.Register("Ticker", &core.Ticker{})
-	server.Register("Timer", &core.Timer{})
+	server.Register("Tick", &core.Tick{})
+	server.Register("Time", &core.Time{})
 	server.Register("Read", &text.FileRead{})
 	server.Register("Render", &text.Render{})
 	server.Register("WordCount", &text.WordCount{})

@@ -11,7 +11,7 @@ func TestTimer_Run(t *testing.T) {
 	durations := make(chan time.Duration)
 	stamps := make(chan time.Time)
 
-	timer := &core.Timer{
+	timer := &core.Time{
 		Duration: durations,
 		Stamp:    stamps,
 	}

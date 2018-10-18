@@ -32,8 +32,8 @@ func main() {
 
 	// create
 	net := protzi.New("timer")
-	net.Add("timer", &core.Timer{})
-	net.Add("ticker", &core.Ticker{})
+	net.Add("timer", &core.Time{})
+	net.Add("ticker", &core.Tick{})
 	net.Add("output", &core.Print{})
 
 	// bind
