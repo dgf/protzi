@@ -49,7 +49,6 @@ func main() {
 	// connect and run
 	net.Connect("timer.Stamp", "output.Message")
 	net.Connect("ticker.Stamps", "output.Message")
-	net.Run()
 
 	// flow
 	durations <- time.Duration(duration) * time.Second
@@ -62,6 +61,7 @@ func main() {
 		case <-out:
 			// discard
 		case <-end:
+			<-out // timer stamp
 			ended = true
 		}
 	}

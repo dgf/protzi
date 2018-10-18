@@ -17,18 +17,18 @@ type Network interface {
 	Connect(out, in string)
 	In(string, interface{})
 	Out(string, interface{})
-	Run()
 }
 
 func convertibleTo(out, in reflect.Type) error {
 	if !in.ConvertibleTo(out) {
-		return fmt.Errorf("Types not convertible %s > %s\n", in, out)
+		return fmt.Errorf("types not convertible %s > %s", in, out)
 	}
 	return nil
 }
 
 type network struct {
 	name string
+	// TODO sync.Map or Mutex
 
 	// component by name
 	components map[string]Component
@@ -41,6 +41,20 @@ type network struct {
 
 	// component output to input connections
 	connections map[string][]string
+}
+
+// listen on output channel to forward payloads to every connected input
+func forward(n *network, sender string, out reflect.Value) {
+	for { // read forever
+		if v, ok := out.Recv(); !ok {
+			panic(fmt.Sprintf("connection %q closed", sender))
+		} else {
+			for _, receiver := range n.connections[sender] {
+				log.Println("send", sender, ">", receiver)
+				n.ins[receiver].Send(v)
+			}
+		}
+	}
 }
 
 // Add a component with a unique name (initializes all unidirectional channels)
@@ -75,9 +89,13 @@ func (n *network) Add(name string, c Component) {
 				n.ins[cn] = dc
 			} else {
 				n.outs[cn] = dc
+				go forward(n, cn, dc)
 			}
 		}
 	}
+
+	// run component loop
+	go c.Run()
 }
 
 // Connect two channels from the output of one to the input of another.
@@ -98,7 +116,8 @@ func (n *network) Connect(out, in string) {
 
 // In maps an input channel
 func (n *network) In(in string, c interface{}) {
-	valueType := reflect.ValueOf(c).Type().Elem()
+	dc := reflect.ValueOf(c)
+	valueType := dc.Type().Elem()
 	cn := "net > " + in
 	log.Println("In", cn, valueType)
 
@@ -109,8 +128,9 @@ func (n *network) In(in string, c interface{}) {
 	} else if err := convertibleTo(ip.Type().Elem(), valueType); err != nil {
 		panic(err)
 	} else {
-		n.outs[cn] = reflect.ValueOf(c)
+		n.outs[cn] = dc
 		n.connections[cn] = append(n.connections[cn], in)
+		go forward(n, cn, dc)
 	}
 }
 
@@ -129,34 +149,6 @@ func (n *network) Out(out string, c interface{}) {
 	} else {
 		n.ins[cn] = reflect.ValueOf(c)
 		n.connections[out] = append(n.connections[out], cn)
-	}
-}
-
-// Run starts the network by co-routine-ing all connection channels and components
-func (n *network) Run() {
-	log.Println("Run network", n.name)
-
-	// connections
-	for s, o := range n.outs {
-		go func(sender string, out reflect.Value) {
-			for { // read forever
-				if v, ok := out.Recv(); !ok {
-					panic(fmt.Sprintf("connection %q closed", sender))
-				} else {
-					for _, receiver := range n.connections[sender] {
-						log.Println("send", sender, ">", receiver)
-						n.ins[receiver].Send(v)
-					}
-				}
-			}
-		}(s, o)
-	}
-
-	// instances
-	for _, c := range n.components {
-		go func(c Component) {
-			c.Run()
-		}(c)
 	}
 }
 

@@ -20,7 +20,6 @@ func ExampleNetwork_echo() {
 	net.Add("echo", &core.Echo{})
 	net.In("echo.Ping", in)
 	net.Out("echo.Pong", out)
-	net.Run()
 
 	in <- "one"
 	fmt.Println(<-out)
@@ -46,7 +45,6 @@ func ExampleNetwork_split() {
 	net.Connect("echoIn.Pong", "echoOut2.Ping")
 	net.Out("echoOut1.Pong", out1)
 	net.Out("echoOut2.Pong", out2)
-	net.Run()
 
 	in <- "echo"
 	twice := 0
@@ -98,9 +96,6 @@ func ExampleNetwork_fileWordCounter() {
 	network.In("read.File", in)
 	network.Connect("read.Text", "count.Text")
 	network.Out("count.Counts", out)
-
-	// run it
-	network.Run()
 
 	// process file
 	in <- file.Name()

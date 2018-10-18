@@ -14,7 +14,6 @@ func main() {
 	net := protzi.New("display")
 	net.Add("output", &core.Print{})
 	net.In("output.Message", in)
-	net.Run()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

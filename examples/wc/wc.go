@@ -30,7 +30,6 @@ func main() {
 	net.Connect("read.Text", "count.Text")
 	net.Connect("read.Error", "output.Message")
 	net.Connect("count.Counts", "output.Message")
-	net.Run()
 
 	// flow the arguments
 	for _, arg := range os.Args[1:] {

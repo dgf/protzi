@@ -41,7 +41,6 @@ func main() {
 	// connect and run it
 	net.Connect("read.Text", "output.Message")
 	net.Connect("read.Error", "output.Message")
-	net.Run()
 
 	// flow the arguments
 	for _, arg := range os.Args[1:] {
