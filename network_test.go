@@ -6,6 +6,7 @@ import (
 	"os"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/dgf/protzi"
 	"github.com/dgf/protzi/component/core"
@@ -136,4 +137,23 @@ func TestNetwork_Connect_invalidPanic(t *testing.T) {
 		}
 	}()
 	network.Connect("out.Counts", "in.Text")
+}
+
+func TestNetwork_Init_timerTwice(t *testing.T) {
+	stamps := make(chan time.Time)
+
+	network := protzi.New("endless initialized timer")
+	network.Add("timer", &core.Time{})
+	network.Out("timer.Stamp", stamps)
+	network.Init("timer.Duration", 1*time.Nanosecond)
+
+	count := 0
+	for count < 2 {
+		select {
+		case <-stamps:
+			count++
+		case <-time.After(1 * time.Millisecond):
+			t.Error("Timed out!")
+		}
+	}
 }

@@ -2,7 +2,6 @@ package protzi
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 )
 
@@ -16,6 +15,7 @@ type Network interface {
 	Add(string, Component)
 	Connect(out, in string)
 	In(string, interface{})
+	Init(string, interface{})
 	Out(string, interface{})
 }
 
@@ -50,7 +50,6 @@ func forward(n *network, sender string, out reflect.Value) {
 			panic(fmt.Sprintf("connection %q closed", sender))
 		} else {
 			for _, receiver := range n.connections[sender] {
-				log.Println("send", sender, ">", receiver)
 				n.ins[receiver].Send(v)
 			}
 		}
@@ -59,7 +58,6 @@ func forward(n *network, sender string, out reflect.Value) {
 
 // Add a component with a unique name (initializes all unidirectional channels)
 func (n *network) Add(name string, c Component) {
-	log.Println("Add", name)
 	n.components[name] = c
 
 	// get underlying value and type
@@ -100,9 +98,6 @@ func (n *network) Add(name string, c Component) {
 
 // Connect two channels from the output of one to the input of another.
 func (n *network) Connect(out, in string) {
-	cn := out + " > " + in
-	log.Println("Connect", cn)
-
 	if op, ok := n.outs[out]; !ok {
 		panic(fmt.Sprintf("Input port %q not found", out))
 	} else if ip, ok := n.ins[in]; !ok {
@@ -119,12 +114,9 @@ func (n *network) In(in string, c interface{}) {
 	dc := reflect.ValueOf(c)
 	valueType := dc.Type().Elem()
 	cn := "net > " + in
-	log.Println("In", cn, valueType)
 
 	if ip, ok := n.ins[in]; !ok {
 		panic(fmt.Sprintf("Input port %q not found", in))
-	} else if _, ok := n.connections[cn]; ok {
-		panic(fmt.Sprintf("Connected %q before", cn))
 	} else if err := convertibleTo(ip.Type().Elem(), valueType); err != nil {
 		panic(err)
 	} else {
@@ -134,16 +126,29 @@ func (n *network) In(in string, c interface{}) {
 	}
 }
 
+// Init infinitely forwards the payload to the input channel.
+func (n *network) Init(in string, p interface{}) {
+	value := reflect.ValueOf(p)
+	if ip, ok := n.ins[in]; !ok {
+		panic(fmt.Sprintf("Init port %q not found", in))
+	} else if err := convertibleTo(ip.Type().Elem(), value.Type()); err != nil {
+		panic(err)
+	} else {
+		go func(port reflect.Value) {
+			for {
+				port.Send(value)
+			}
+		}(ip)
+	}
+}
+
 // Out maps an output channel
 func (n *network) Out(out string, c interface{}) {
 	valueType := reflect.ValueOf(c).Type().Elem()
 	cn := out + " > net"
-	log.Println("Out", cn, valueType)
 
 	if op, ok := n.outs[out]; !ok {
 		panic(fmt.Sprintf("output port %q not found", out))
-	} else if _, ok := n.connections[cn]; ok {
-		panic(fmt.Sprintf("connected %q before", cn))
 	} else if err := convertibleTo(valueType, op.Type().Elem()); err != nil {
 		panic(err)
 	} else {
