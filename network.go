@@ -13,15 +13,15 @@ type Component interface {
 // Network that flows.
 type Network interface {
 	Add(string, Component)
-	Connect(out, in string)
-	In(string, interface{})
-	Init(string, interface{})
-	Out(string, interface{})
+	Connect(out, in string) error
+	In(string, interface{}) error
+	Init(string, interface{}) error
+	Out(string, interface{}) error
 }
 
 func convertibleTo(out, in reflect.Type) error {
 	if !in.ConvertibleTo(out) {
-		return fmt.Errorf("types not convertible %s > %s", in, out)
+		return fmt.Errorf("types not convertible (%s > %s)", in, out)
 	}
 	return nil
 }
@@ -44,16 +44,17 @@ type network struct {
 }
 
 // listen on output channel to forward payloads to every connected input
-func forward(n *network, sender string, out reflect.Value) {
-	for { // read forever
+func forward(n *network, sender string, out reflect.Value) error {
+	for { // read forever TODO use context to cancel
 		if v, ok := out.Recv(); !ok {
-			panic(fmt.Sprintf("connection %q closed", sender))
+			return fmt.Errorf("connection %q closed", sender)
 		} else {
 			for _, receiver := range n.connections[sender] {
 				n.ins[receiver].Send(v)
 			}
 		}
 	}
+	return nil
 }
 
 // Add a component with a unique name (initializes all unidirectional channels)
@@ -97,64 +98,68 @@ func (n *network) Add(name string, c Component) {
 }
 
 // Connect two channels from the output of one to the input of another.
-func (n *network) Connect(out, in string) {
+func (n *network) Connect(out, in string) error {
 	if op, ok := n.outs[out]; !ok {
-		panic(fmt.Sprintf("Input port %q not found", out))
+		return fmt.Errorf("output port %q not found", out)
 	} else if ip, ok := n.ins[in]; !ok {
-		panic(fmt.Sprintf("Output port %q not found", in))
+		return fmt.Errorf("input port %q not found", in)
 	} else if err := convertibleTo(ip.Type().Elem(), op.Type().Elem()); err != nil {
-		panic(err)
+		return err
 	} else {
 		n.connections[out] = append(n.connections[out], in)
 	}
+	return nil
 }
 
 // In maps an input channel
-func (n *network) In(in string, c interface{}) {
+func (n *network) In(in string, c interface{}) error {
 	dc := reflect.ValueOf(c)
 	valueType := dc.Type().Elem()
 	cn := "net > " + in
 
 	if ip, ok := n.ins[in]; !ok {
-		panic(fmt.Sprintf("Input port %q not found", in))
+		return fmt.Errorf("input port %q not found", in)
 	} else if err := convertibleTo(ip.Type().Elem(), valueType); err != nil {
-		panic(err)
+		return err
 	} else {
 		n.outs[cn] = dc
 		n.connections[cn] = append(n.connections[cn], in)
 		go forward(n, cn, dc)
 	}
+	return nil
 }
 
 // Init infinitely forwards the payload to the input channel.
-func (n *network) Init(in string, p interface{}) {
+func (n *network) Init(in string, p interface{}) error {
 	value := reflect.ValueOf(p)
 	if ip, ok := n.ins[in]; !ok {
-		panic(fmt.Sprintf("Init port %q not found", in))
+		return fmt.Errorf("init port %q not found", in)
 	} else if err := convertibleTo(ip.Type().Elem(), value.Type()); err != nil {
-		panic(err)
+		return err
 	} else {
 		go func(port reflect.Value) {
-			for {
+			for { // forever TODO cancel with context
 				port.Send(value)
 			}
 		}(ip)
 	}
+	return nil
 }
 
 // Out maps an output channel
-func (n *network) Out(out string, c interface{}) {
+func (n *network) Out(out string, c interface{}) error {
 	valueType := reflect.ValueOf(c).Type().Elem()
 	cn := out + " > net"
 
 	if op, ok := n.outs[out]; !ok {
-		panic(fmt.Sprintf("output port %q not found", out))
+		return fmt.Errorf("output port %q not found", out)
 	} else if err := convertibleTo(valueType, op.Type().Elem()); err != nil {
-		panic(err)
+		return err
 	} else {
 		n.ins[cn] = reflect.ValueOf(c)
 		n.connections[out] = append(n.connections[out], cn)
 	}
+	return nil
 }
 
 // New creates a fresh empty network.

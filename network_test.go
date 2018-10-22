@@ -19,8 +19,12 @@ func ExampleNetwork_echo() {
 
 	net := protzi.New("passthru")
 	net.Add("echo", &core.Echo{})
-	net.In("echo.Ping", in)
-	net.Out("echo.Pong", out)
+
+	if err := net.In("echo.Ping", in); err != nil {
+		fmt.Println(err)
+	} else if err := net.Out("echo.Pong", out); err != nil {
+		fmt.Println(err)
+	}
 
 	in <- "one"
 	fmt.Println(<-out)
@@ -41,11 +45,17 @@ func ExampleNetwork_split() {
 	net.Add("echoOut1", &core.Echo{})
 	net.Add("echoOut2", &core.Echo{})
 
-	net.In("echoIn.Ping", in)
-	net.Connect("echoIn.Pong", "echoOut1.Ping")
-	net.Connect("echoIn.Pong", "echoOut2.Ping")
-	net.Out("echoOut1.Pong", out1)
-	net.Out("echoOut2.Pong", out2)
+	if err := net.In("echoIn.Ping", in); err != nil {
+		fmt.Println(err)
+	} else if err := net.Connect("echoIn.Pong", "echoOut1.Ping"); err != nil {
+		fmt.Println(err)
+	} else if err := net.Connect("echoIn.Pong", "echoOut2.Ping"); err != nil {
+		fmt.Println(err)
+	} else if err := net.Out("echoOut1.Pong", out1); err != nil {
+		fmt.Println(err)
+	} else if err := net.Out("echoOut2.Pong", out2); err != nil {
+		fmt.Println(err)
+	}
 
 	in <- "echo"
 	twice := 0
@@ -94,9 +104,13 @@ func ExampleNetwork_fileWordCounter() {
 	network.Add("count", &text.WordCount{})
 
 	// connect component
-	network.In("read.File", in)
-	network.Connect("read.Text", "count.Text")
-	network.Out("count.Counts", out)
+	if err := network.In("read.File", in); err != nil {
+		fmt.Println(err)
+	} else if err := network.Connect("read.Text", "count.Text"); err != nil {
+		fmt.Println(err)
+	} else if err := network.Out("count.Counts", out); err != nil {
+		fmt.Println(err)
+	}
 
 	// process file
 	in <- file.Name()
@@ -123,7 +137,9 @@ func TestNetwork_Connect_valid(t *testing.T) {
 	network := protzi.New("valid read text to output interface")
 	network.Add("read", &text.FileRead{})
 	network.Add("out", &core.Print{})
-	network.Connect("read.Text", "out.Message")
+	if err := network.Connect("read.Text", "out.Message"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestNetwork_Connect_invalidPanic(t *testing.T) {
@@ -131,12 +147,9 @@ func TestNetwork_Connect_invalidPanic(t *testing.T) {
 	network.Add("out", &text.WordCount{})
 	network.Add("in", &text.WordCount{})
 
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("should panic with invalid type mapping")
-		}
-	}()
-	network.Connect("out.Counts", "in.Text")
+	if err := network.Connect("out.Counts", "in.Text"); err == nil {
+		t.Errorf("should fail with invalid type mapping")
+	}
 }
 
 func TestNetwork_Init_timerTwice(t *testing.T) {
@@ -144,8 +157,11 @@ func TestNetwork_Init_timerTwice(t *testing.T) {
 
 	network := protzi.New("endless initialized timer")
 	network.Add("timer", &core.Time{})
-	network.Out("timer.Stamp", stamps)
-	network.Init("timer.Duration", 1*time.Nanosecond)
+	if err := network.Out("timer.Stamp", stamps); err != nil {
+		t.Error(err)
+	} else if err := network.Init("timer.Duration", time.Nanosecond); err != nil {
+		t.Error(err)
+	}
 
 	count := 0
 	for count < 2 {
