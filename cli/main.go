@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/dgf/protzi/api/web"
 	"github.com/dgf/protzi/api/web/socket"
 )
 
@@ -19,10 +20,16 @@ func main() {
 	signal.Notify(interrupt, os.Interrupt)
 
 	log.Println("connect ", *addr)
-	client := socket.Connect(*addr, func(response socket.Message) {
+	client := socket.Connect(*addr, func(response web.Message) {
 		switch response.Type {
 		case "error":
 			log.Println("error:", string(response.Payload))
+		case "output":
+			log.Println("output:\n", string(response.Payload))
+		case "command":
+			log.Println("command:", string(response.Payload))
+		case "flow":
+			log.Println("flow:\n", string(response.Payload))
 		case "flows":
 			log.Println("flows:\n", string(response.Payload))
 		case "components":
@@ -32,9 +39,20 @@ func main() {
 		}
 	})
 
-	client.Send(socket.Command{Call: "flows"})
-	client.Send(socket.Command{Call: "unknown"})
-	client.Send(socket.Command{Call: "components"})
+	client.Components()
+
+	flow := "client test"
+	client.Flow(flow)
+	client.Add(flow, "echo1", "Echo")
+	client.Add(flow, "out1", "Print")
+	client.Connect(flow, "echo1", "Pong", "out1", "Message")
+
+	client.Flows()
+
+	client.Receive(flow, "out1", "Printed")
+	client.Send(flow, "echo1", "Ping", "echo one")
+	client.Send(flow, "echo1", "Ping", "echo two")
+	client.Send(flow, "echo1", "Ping", "echo three")
 
 	<-interrupt
 	log.Println("interrupted")

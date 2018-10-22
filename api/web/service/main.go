@@ -26,25 +26,6 @@ func main() {
 		fmt.Println(component)
 	}
 
-	// flow an echo to print
-	echoFlow := api.New("Echo example")
-	echoFlow.Add("echo1", "Echo")
-	echoFlow.Add("out1", "Print")
-	echoFlow.Connect("echo1", "Pong", "out1", "Message")
-	in := echoFlow.In("echo1", "Ping")
-	out := echoFlow.Out("out1", "Printed")
-
-	fmt.Println("flows:")
-	fmt.Println(api.Flows())
-
-	for _, ping := range []string{"one", "two"} {
-		go in.Send(ping)
-		_, ok := out.Receive()
-		if !ok {
-			log.Fatal(ping, "failed!")
-		}
-	}
-
 	if err := server.Start(); err != nil {
 		log.Fatal("something went wrong:", err.Error())
 	}
